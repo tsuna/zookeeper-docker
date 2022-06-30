@@ -26,11 +26,10 @@ RUN set -eux; \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
         ca-certificates \
-        dirmngr \
         dumb-init \
         gosu \
-        gnupg \
         netcat \
+        procps \
         wget; \
     rm -rf /var/lib/apt/lists/*; \
 # Verify that gosu binary works
@@ -42,6 +41,11 @@ ARG DISTRO_NAME=apache-zookeeper-3.8.0-bin
 
 # Download Apache Zookeeper, verify its PGP signature, untar and clean up
 RUN set -eux; \
+    apt-get update; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    pkgs="dirmngr gnupg"; \
+    apt-get install -y --no-install-recommends $pkgs; \
+    rm -rf /var/lib/apt/lists/*; \
     ddist() { \
         local f="$1"; shift; \
         local distFile="$1"; shift; \
@@ -70,6 +74,7 @@ RUN set -eux; \
     tar -zxf "$DISTRO_NAME.tar.gz"; \
     mv "$DISTRO_NAME/conf/"* "$ZOO_CONF_DIR"; \
     rm -rf "$GNUPGHOME" "$DISTRO_NAME.tar.gz" "$DISTRO_NAME.tar.gz.asc"; \
+    apt-get remove -y --auto-remove $pkgs; \
     chown -R zookeeper:zookeeper "/$DISTRO_NAME"
 
 WORKDIR $DISTRO_NAME
